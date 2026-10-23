@@ -1,0 +1,17 @@
+services:
+  api:
+    build: {context: ., dockerfile: backend/Dockerfile}
+    env_file: .env
+    ports: ["8000:8000"]
+    volumes:
+      - "vups-workspaces:/app/workspaces"
+      - "vups-generated-images:/app/generated_images"
+  ui:
+    build: {context: ., dockerfile: frontend/Dockerfile}
+    environment: {API_BASE_URL: http://api:8000}
+    ports: ["8501:8501"]
+    depends_on: [api]
+
+volumes:
+  vups-workspaces:
+  vups-generated-images:

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: vups-ui, namespace: vups-gen4}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: vups-ui}}
+  template:
+    metadata: {labels: {app: vups-ui}}
+    spec:
+      containers:
+      - name: ui
+        image: vups-gen4-ui:dev
+        imagePullPolicy: IfNotPresent
+        ports: [{containerPort: 8501}]
+        env: [{name: API_BASE_URL, value: http://vups-api:8000}]
+        resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: "1", memory: 512Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: vups-ui, namespace: vups-gen4}
+spec:
+  type: NodePort
+  selector: {app: vups-ui}
+  ports: [{port: 8501, targetPort: 8501, nodePort: 30501}]

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: vups-api, namespace: vups-gen4}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: vups-api}}
+  template:
+    metadata: {labels: {app: vups-api}}
+    spec:
+      securityContext: {fsGroup: 10001}
+      containers:
+      - name: api
+        image: vups-gen4-api:dev
+        imagePullPolicy: IfNotPresent
+        ports: [{containerPort: 8000}]
+        env:
+        - {name: TURSO_DATABASE_URL, valueFrom: {secretKeyRef: {name: vups-secrets, key: TURSO_DATABASE_URL, optional: true}}}
+        - {name: TURSO_AUTH_TOKEN, valueFrom: {secretKeyRef: {name: vups-secrets, key: TURSO_AUTH_TOKEN, optional: true}}}
+        - {name: MODEL_API_KEY, valueFrom: {secretKeyRef: {name: vups-secrets, key: MODEL_API_KEY, optional: true}}}
+        - {name: MODEL_BASE_URL, valueFrom: {configMapKeyRef: {name: vups-config, key: MODEL_BASE_URL, optional: true}}}
+        - {name: MODEL_NAME, valueFrom: {configMapKeyRef: {name: vups-config, key: MODEL_NAME, optional: true}}}
+        - {name: VISION_MODEL_NAME, valueFrom: {configMapKeyRef: {name: vups-config, key: VISION_MODEL_NAME, optional: true}}}
+        - {name: VISION_BASE_URL, valueFrom: {configMapKeyRef: {name: vups-config, key: VISION_BASE_URL, optional: true}}}
+        - {name: IMAGE_GENERATION_PROVIDER, valueFrom: {configMapKeyRef: {name: vups-config, key: IMAGE_GENERATION_PROVIDER, optional: true}}}
+        - {name: COMFYUI_BASE_URL, valueFrom: {configMapKeyRef: {name: vups-config, key: COMFYUI_BASE_URL, optional: true}}}
+        - {name: COMFYUI_CHECKPOINT, valueFrom: {configMapKeyRef: {name: vups-config, key: COMFYUI_CHECKPOINT, optional: true}}}
+        - {name: IMAGE_OUTPUT_DIR, value: /app/generated_images}
+        readinessProbe: {httpGet: {path: /ready, port: 8000}, initialDelaySeconds: 5, periodSeconds: 10}
+        livenessProbe: {httpGet: {path: /health, port: 8000}, initialDelaySeconds: 5, periodSeconds: 20}
+        volumeMounts:
+        - {name: workspaces, mountPath: /app/workspaces}
+        - {name: generated-images, mountPath: /app/generated_images}
+        resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: "1", memory: 512Mi}}
+      volumes:
+      - {name: workspaces, emptyDir: {}}
+      - {name: generated-images, emptyDir: {}}
+---
+apiVersion: v1
+kind: Service
+metadata: {name: vups-api, namespace: vups-gen4}
+spec:
+  selector: {app: vups-api}
+  ports: [{port: 8000, targetPort: 8000}]

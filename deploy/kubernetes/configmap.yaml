@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: vups-config, namespace: vups-gen4}
+data:
+  MODEL_BASE_URL: ""
+  MODEL_NAME: ""
+  VISION_MODEL_NAME: "qwen2.5vl:7b"
+  VISION_BASE_URL: ""
+  IMAGE_GENERATION_PROVIDER: "none"
+  COMFYUI_BASE_URL: ""
+  COMFYUI_CHECKPOINT: ""
